@@ -12,7 +12,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { CityProvider, CitySelect } from "../components/CitySelect";
+import { CITIES } from "../lib/bms-types";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 
 function NotFoundComponent() {
   return (
@@ -124,5 +125,24 @@ function RootComponent() {
         </header>
         <Outlet />
     </QueryClientProvider>
+  );
+}
+
+function CityPicker() {
+  const navigate = useNavigate();
+  const params = useParams({ strict: false }) as { city?: string };
+  const search = useSearch({ strict: false }) as { city?: string };
+  const city = params.city ?? search.city ?? "mumbai";
+  return (
+    <select
+      aria-label="Choose your city"
+      value={city}
+      onChange={(e) => navigate({ to: "/", search: { city: e.target.value, tab: "now" } })}
+      className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground"
+    >
+      {CITIES.map((c) => (
+        <option key={c.slug} value={c.slug}>{c.name}</option>
+      ))}
+    </select>
   );
 }
