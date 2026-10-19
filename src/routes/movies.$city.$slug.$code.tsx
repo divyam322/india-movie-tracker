@@ -119,7 +119,7 @@ function MoviePage() {
                       className="rounded-md border border-primary/40 px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
                     >
                       {s.time}
-                      {s.format && <span className="block text-[9px] font-normal uppercase tracking-wide text-muted-foreground">{s.format}</span>}
+                      {s.format && <span className="block text-[9px] font-normal uppercase tracking-wide opacity-70">{s.format}</span>}
                     </a>
                   ))}
                 </div>
