@@ -30,7 +30,7 @@ export const MOVIES: Movie[] = [
   { id: "pushpak", title: "Pushpak", language: "Telugu", genre: ["Sci-Fi", "Mythology"], releaseDate: "2026-11-07", duration: "2h 55m", certificate: "UA 16+", synopsis: "An archaeologist uncovers a flying chariot that rewrites everything known about history.", hue: 280, rating: 4.5, votes: 3120 },
   { id: "ghar-wapsi", title: "Ghar Wapsi", language: "Hindi", genre: ["Comedy", "Family"], releaseDate: "2026-11-14", duration: "2h 05m", certificate: "U", synopsis: "Three siblings reunite for a chaotic Diwali in their grandmother's crumbling haveli.", hue: 50, rating: 4.0, votes: 640 },
   { id: "kolkata-noir", title: "Kolkata Noir", language: "Bengali", genre: ["Thriller", "Crime"], releaseDate: "2026-11-21", duration: "2h 12m", certificate: "A", synopsis: "A retired detective is pulled back into a murder case on the banks of the Hooghly.", hue: 0, rating: 4.3, votes: 410 },
-  { id: "kantara-roots", title: "Daiva", language: "Kannada", genre: ["Folk", "Thriller"], releaseDate: "2026-11-28", duration: "2h 30m", certificate: "UA 13+", synopsis: "A forest guardian's ancient ritual awakens forces the modern world cannot control.", hue: 140, rating: 4.6, votes: 2210 },
+  { id: "daiva", title: "Daiva", language: "Kannada", genre: ["Folk", "Thriller"], releaseDate: "2026-11-28", duration: "2h 30m", certificate: "UA 13+", synopsis: "A forest guardian's ancient ritual awakens forces the modern world cannot control.", hue: 140, rating: 4.6, votes: 2210 },
 ];
 
 export const THEATRES: Theatre[] = [
