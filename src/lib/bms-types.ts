@@ -2,22 +2,22 @@ export type BmsMovie = {
   code: string;
   slug: string;
   title: string;
-  certificate?: string;
+  certificate?: string | undefined;
   languages: string[];
   poster: string;
-  rating?: string;
-  buzz?: string;
+  rating?: string | undefined;
+  buzz?: string | undefined;
 };
 
 export type CinemaShows = {
   code: string;
   name: string;
-  cancellable?: boolean;
-  shows: { time: string; format?: string }[];
+  cancellable?: boolean | undefined;
+  shows: { time: string; format?: string | undefined }[];
 };
 
 export type ShowtimesResult = {
-  runtime?: string;
+  runtime?: string | undefined;
   genres: string[];
   formats: string[];
   cinemas: CinemaShows[];

@@ -22,7 +22,7 @@ type Review = { id: string; author: string; rating: number; text: string; date: 
 function MoviePage() {
   const { city, slug, code } = Route.useParams();
   const days = nextDays(7);
-  const { date = days[0].key } = Route.useSearch();
+  const { date = days[0]!.key } = Route.useSearch();
   const { data: listing } = useQuery(moviesQuery(city, false));
   const { data: soon } = useQuery({ ...moviesQuery(city, true), enabled: !!listing && !listing.movies.some((m) => m.code === code) });
   const movie = [...(listing?.movies ?? []), ...(soon?.movies ?? [])].find((m) => m.code === code);
