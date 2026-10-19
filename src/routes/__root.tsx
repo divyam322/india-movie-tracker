@@ -12,7 +12,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { CityProvider, CitySelect } from "../components/CitySelect";
+import { CITIES } from "../lib/bms-types";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 
 function NotFoundComponent() {
   return (
@@ -116,19 +117,32 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CityProvider>
         <header className="sticky top-0 z-10 border-b border-border bg-background/85 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <Link to="/" className="font-display text-3xl text-primary">ReelDekho</Link>
-            <nav className="flex items-center gap-5 text-sm">
-              <Link to="/" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }} activeOptions={{ exact: true }}>Movies</Link>
-              <Link to="/theatres" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>Theatres</Link>
-              <CitySelect />
-            </nav>
+            <Link to="/" className="font-display text-3xl tracking-wide text-foreground">Reel<span className="text-primary">Dekho</span></Link>
+            <CityPicker />
           </div>
         </header>
         <Outlet />
-      </CityProvider>
     </QueryClientProvider>
+  );
+}
+
+function CityPicker() {
+  const navigate = useNavigate();
+  const params = useParams({ strict: false }) as { city?: string };
+  const search = useSearch({ strict: false }) as { city?: string };
+  const city = params.city ?? search.city ?? "mumbai";
+  return (
+    <select
+      aria-label="Choose your city"
+      value={city}
+      onChange={(e) => navigate({ to: "/", search: { city: e.target.value, tab: "now" } })}
+      className="rounded-full border border-border bg-card px-4 py-1.5 text-sm text-foreground"
+    >
+      {CITIES.map((c) => (
+        <option key={c.slug} value={c.slug}>{c.name}</option>
+      ))}
+    </select>
   );
 }
