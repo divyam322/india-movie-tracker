@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MoviesCitySlugCodeRouteImport } from './routes/movies.$city.$slug.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MoviesCitySlugCodeRoute = MoviesCitySlugCodeRouteImport.update({
+  id: '/movies/$city/$slug/$code',
+  path: '/movies/$city/$slug/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/movies/$city/$slug/$code': typeof MoviesCitySlugCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/movies/$city/$slug/$code': typeof MoviesCitySlugCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/movies/$city/$slug/$code': typeof MoviesCitySlugCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/movies/$city/$slug/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/movies/$city/$slug/$code'
+  id: '__root__' | '/' | '/movies/$city/$slug/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MoviesCitySlugCodeRoute: typeof MoviesCitySlugCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/movies/$city/$slug/$code': {
+      id: '/movies/$city/$slug/$code'
+      path: '/movies/$city/$slug/$code'
+      fullPath: '/movies/$city/$slug/$code'
+      preLoaderRoute: typeof MoviesCitySlugCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MoviesCitySlugCodeRoute: MoviesCitySlugCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
