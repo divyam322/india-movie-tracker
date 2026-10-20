@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getMovies, getShowtimes } from "./bms.functions";
+import { getCinemaAddress, getMovies, getShowtimes } from "./bms.functions";
 
 export const moviesQuery = (city: string, upcoming: boolean) =>
   queryOptions({
