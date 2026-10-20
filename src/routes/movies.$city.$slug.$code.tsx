@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { moviesQuery, showtimesQuery } from "@/lib/queries";
+import { cinemaAddressQuery, moviesQuery, showtimesQuery } from "@/lib/queries";
 import { cityName, estimatePrice, nextDays } from "@/lib/bms-types";
 
 const titleFromSlug = (s: string) => s.split("-").map((w) => w[0]?.toUpperCase() + w.slice(1)).join(" ");
@@ -109,6 +109,7 @@ function MoviePage() {
                     )}
                   </div>
                 </div>
+                <AddressRow name={c.name} city={city} />
                 <div className="mt-4 flex flex-wrap gap-2">
                   {c.shows.map((s, i) => (
                     <a
