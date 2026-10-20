@@ -139,35 +139,114 @@ function MoviePage() {
 const chipBtn =
   "rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground";
 
+const MAPS_EMBED_KEY = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"] as
+  | string
+  | undefined;
+
+function MapModal({
+  title,
+  embedSrc,
+  externalUrl,
+  onClose,
+}: {
+  title: string;
+  embedSrc: string;
+  externalUrl: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
+          <p className="truncate font-semibold text-foreground">{title}</p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close map"
+            className="rounded-md px-2 py-1 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            ✕
+          </button>
+        </div>
+        <iframe
+          title={`Map of ${title}`}
+          src={embedSrc}
+          className="h-[60vh] w-full border-0"
+          loading="lazy"
+          allowFullScreen
+        />
+        <div className="flex items-center justify-end border-t border-border px-4 py-2">
+          <a
+            href={externalUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Open in Google Maps ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AddressRow({ name, city }: { name: string; city: string }) {
   const [show, setShow] = useState(false);
+  const [modal, setModal] = useState<null | { title: string; src: string; external: string }>(null);
   const { data, isLoading } = useQuery({
     ...cinemaAddressQuery(name, city),
     enabled: show,
   });
   const query = encodeURIComponent(`${name}, ${cityName(city)}`);
+  const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+  const mapsDirUrl = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+  const embedPlace = MAPS_EMBED_KEY
+    ? `https://www.google.com/maps/embed/v1/place?key=${MAPS_EMBED_KEY}&q=${query}`
+    : null;
+  const embedDir = MAPS_EMBED_KEY
+    ? `https://www.google.com/maps/embed/v1/directions?key=${MAPS_EMBED_KEY}&origin=My+Location&destination=${query}&mode=driving`
+    : null;
+
   return (
     <div className="mt-3">
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={() => setShow(true)} className={chipBtn}>
           Address
         </button>
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${query}`}
-          target="_blank"
-          rel="noreferrer"
-          className={chipBtn}
-        >
-          Map
-        </a>
-        <a
-          href={`https://www.google.com/maps/dir/?api=1&destination=${query}`}
-          target="_blank"
-          rel="noreferrer"
-          className={chipBtn}
-        >
-          Directions
-        </a>
+        {embedPlace ? (
+          <button
+            type="button"
+            onClick={() => setModal({ title: name, src: embedPlace, external: mapsSearchUrl })}
+            className={chipBtn}
+          >
+            Map
+          </button>
+        ) : (
+          <a href={mapsSearchUrl} target="_blank" rel="noreferrer" className={chipBtn}>
+            Map
+          </a>
+        )}
+        {embedDir ? (
+          <button
+            type="button"
+            onClick={() =>
+              setModal({ title: `Directions to ${name}`, src: embedDir, external: mapsDirUrl })
+            }
+            className={chipBtn}
+          >
+            Directions
+          </button>
+        ) : (
+          <a href={mapsDirUrl} target="_blank" rel="noreferrer" className={chipBtn}>
+            Directions
+          </a>
+        )}
       </div>
       {show && (
         <p className="mt-2 text-sm text-muted-foreground">
@@ -175,6 +254,14 @@ function AddressRow({ name, city }: { name: string; city: string }) {
             ? "Looking up address…"
             : (data?.address ?? data?.error ?? "Address not found")}
         </p>
+      )}
+      {modal && (
+        <MapModal
+          title={modal.title}
+          embedSrc={modal.src}
+          externalUrl={modal.external}
+          onClose={() => setModal(null)}
+        />
       )}
     </div>
   );
