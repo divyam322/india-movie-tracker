@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getMovies, getShowtimes } from "./bms.functions";
+import { getCinemaAddress, getMovies, getShowtimes } from "./bms.functions";
 
 export const moviesQuery = (city: string, upcoming: boolean) =>
   queryOptions({
@@ -13,4 +13,11 @@ export const showtimesQuery = (city: string, slug: string, code: string, date: s
     queryKey: ["shows", city, code, date],
     queryFn: () => getShowtimes({ data: { city, slug, code, date } }),
     staleTime: 10 * 60_000,
+  });
+
+export const cinemaAddressQuery = (name: string, city: string) =>
+  queryOptions({
+    queryKey: ["cinema-address", city, name],
+    queryFn: () => getCinemaAddress({ data: { name, city } }),
+    staleTime: 24 * 60 * 60_000,
   });

@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { parseListing, parseShowtimes, scrapeMarkdown } from "./bms.server";
+import { lookupCinemaAddress } from "./places.server";
+import { cityName } from "./bms-types";
 
 const slug = z.string().regex(/^[a-z0-9-]+$/).max(80);
 
@@ -27,5 +29,15 @@ export const getShowtimes = createServerFn({ method: "GET" })
       return { ...parseShowtimes(await scrapeMarkdown(url)), error: null as string | null };
     } catch (e) {
       return { runtime: undefined, genres: [], formats: [], cinemas: [], error: e instanceof Error ? e.message : "Failed to load" };
+    }
+  });
+
+export const getCinemaAddress = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ name: z.string().min(2).max(120), city: slug }).parse(d))
+  .handler(async ({ data }) => {
+    try {
+      return { address: await lookupCinemaAddress(data.name, cityName(data.city)), error: null as string | null };
+    } catch (e) {
+      return { address: null, error: e instanceof Error ? e.message : "Lookup failed" };
     }
   });

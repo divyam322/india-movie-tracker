@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { moviesQuery, showtimesQuery } from "@/lib/queries";
+import { cinemaAddressQuery, moviesQuery, showtimesQuery } from "@/lib/queries";
 import { cityName, estimatePrice, nextDays } from "@/lib/bms-types";
 
 const titleFromSlug = (s: string) => s.split("-").map((w) => w[0]?.toUpperCase() + w.slice(1)).join(" ");
@@ -109,6 +109,7 @@ function MoviePage() {
                     )}
                   </div>
                 </div>
+                <AddressRow name={c.name} city={city} />
                 <div className="mt-4 flex flex-wrap gap-2">
                   {c.shows.map((s, i) => (
                     <a
@@ -132,6 +133,50 @@ function MoviePage() {
         <Reviews code={code} />
       </div>
     </main>
+  );
+}
+
+const chipBtn =
+  "rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground";
+
+function AddressRow({ name, city }: { name: string; city: string }) {
+  const [show, setShow] = useState(false);
+  const { data, isLoading } = useQuery({
+    ...cinemaAddressQuery(name, city),
+    enabled: show,
+  });
+  const query = encodeURIComponent(`${name}, ${cityName(city)}`);
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setShow(true)} className={chipBtn}>
+          Address
+        </button>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${query}`}
+          target="_blank"
+          rel="noreferrer"
+          className={chipBtn}
+        >
+          Map
+        </a>
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${query}`}
+          target="_blank"
+          rel="noreferrer"
+          className={chipBtn}
+        >
+          Directions
+        </a>
+      </div>
+      {show && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {isLoading
+            ? "Looking up address…"
+            : (data?.address ?? data?.error ?? "Address not found")}
+        </p>
+      )}
+    </div>
   );
 }
 
