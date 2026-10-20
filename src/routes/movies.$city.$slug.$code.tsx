@@ -136,6 +136,50 @@ function MoviePage() {
   );
 }
 
+const chipBtn =
+  "rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground";
+
+function AddressRow({ name, city }: { name: string; city: string }) {
+  const [show, setShow] = useState(false);
+  const { data, isLoading } = useQuery({
+    ...cinemaAddressQuery(name, city),
+    enabled: show,
+  });
+  const query = encodeURIComponent(`${name}, ${cityName(city)}`);
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setShow(true)} className={chipBtn}>
+          Address
+        </button>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${query}`}
+          target="_blank"
+          rel="noreferrer"
+          className={chipBtn}
+        >
+          Map
+        </a>
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${query}`}
+          target="_blank"
+          rel="noreferrer"
+          className={chipBtn}
+        >
+          Directions
+        </a>
+      </div>
+      {show && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {isLoading
+            ? "Looking up address…"
+            : (data?.address ?? data?.error ?? "Address not found")}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Stars({ value, onChange }: { value: number; onChange?: (n: number) => void }) {
   return (
     <div className="flex gap-1">
