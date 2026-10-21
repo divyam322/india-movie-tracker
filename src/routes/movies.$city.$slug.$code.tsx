@@ -10,7 +10,7 @@ const titleFromSlug = (s: string) => s.split("-").map((w) => w[0]?.toUpperCase()
 export const Route = createFileRoute("/movies/$city/$slug/$code")({
   validateSearch: z.object({ date: z.string().regex(/^\d{8}$/).optional().catch(undefined) }),
   head: ({ params }) => {
-    const t = `${titleFromSlug(params.slug)} showtimes in ${cityName(params.city)} | ReelDekho`;
+    const t = `${titleFromSlug(params.slug)} showtimes in ${cityName(params.city)} | DivCineDekho`;
     const d = `Theatres, show timings, approximate ticket prices and reviews for ${titleFromSlug(params.slug)} in ${cityName(params.city)}.`;
     return { meta: [{ title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] };
   },

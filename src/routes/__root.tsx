@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ReelDekho" },
+      { title: "DivCineDekho" },
       { name: "description", content: "Track upcoming movies in Indian theatres." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -119,7 +119,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
         <header className="sticky top-0 z-10 border-b border-border bg-background/85 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <Link to="/" className="font-display text-3xl tracking-wide text-foreground">Reel<span className="text-primary">Dekho</span></Link>
+            <Link to="/" className="font-display text-3xl tracking-wide text-foreground">DivCine<span className="text-primary">Dekho</span></Link>
             <CityPicker />
           </div>
         </header>
