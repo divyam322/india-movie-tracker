@@ -99,3 +99,9 @@ export function parseShowtimes(md: string): ShowtimesResult {
 
   return { runtime, genres: [...new Set(genres)], formats, cinemas };
 }
+
+/** Language filters BookMyShow offers on a listing page (e.g. Hindi, English, Bengali). */
+export function parseLanguageFilters(md: string): string[] {
+  const block = md.match(/Languages\n\nClear\n\n([\s\S]*?)\n\nGenres/)?.[1] ?? "";
+  return [...new Set(block.split("\n").map((s) => s.trim()).filter((s) => /^[A-Za-z]+$/.test(s)))];
+}

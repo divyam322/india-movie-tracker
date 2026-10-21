@@ -14,9 +14,9 @@ export const Route = createFileRoute("/")({
   validateSearch: search,
   head: () => ({
     meta: [
-      { title: "ReelDekho — Movies & showtimes in Indian theatres" },
+      { title: "DivCineDekho — Movies & showtimes in Indian theatres" },
       { name: "description", content: "Live showtimes, theatres near you, approximate ticket prices and audience reviews across India." },
-      { property: "og:title", content: "ReelDekho — Movies & showtimes in Indian theatres" },
+      { property: "og:title", content: "DivCineDekho — Movies & showtimes in Indian theatres" },
       { property: "og:description", content: "Find where and when your next movie is playing, city by city." },
     ],
   }),
