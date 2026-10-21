@@ -1,18 +1,22 @@
 import type { BmsMovie, CinemaShows, ShowtimesResult } from "./bms-types";
 
+const DIRECT = "https://api.firecrawl.dev/v2/scrape";
 const GATEWAY = "https://connector-gateway.lovable.dev/firecrawl/v2/scrape";
 
+// Server-only. A real Firecrawl key (fc-...) calls Firecrawl directly — this is the
+// path used on Netlify, where FIRECRAWL_API_KEY is set in the site's environment
+// settings. A Lovable connection key (lovc_...) falls back to the Lovable gateway.
 export async function scrapeMarkdown(url: string): Promise<string> {
-  const lovableKey = process.env["LOVABLE_API_KEY"];
   const fcKey = process.env["FIRECRAWL_API_KEY"];
-  if (!lovableKey || !fcKey) throw new Error("Firecrawl is not connected");
-  const res = await fetch(GATEWAY, {
+  if (!fcKey) throw new Error("FIRECRAWL_API_KEY is not configured");
+  const direct = fcKey.startsWith("fc-");
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  if (!direct && !lovableKey) throw new Error("FIRECRAWL_API_KEY must be a Firecrawl key (fc-...)");
+  const res = await fetch(direct ? DIRECT : GATEWAY, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": fcKey,
-    },
+    headers: direct
+      ? { "Content-Type": "application/json", Authorization: `Bearer ${fcKey}` }
+      : { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": fcKey },
     body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, maxAge: 3600000 }),
   });
   if (!res.ok) {
