@@ -278,12 +278,16 @@ function Stars({ value, onChange }: { value: number; onChange?: (n: number) => v
   );
 }
 
-function Reviews({ code }: { code: string }) {
+const REVIEWS_ENDPOINT = "https://iaycotbackcdgpslstyw.supabase.co/rest/v1/reviews";
+const REVIEWS_API_KEY = "sb_publishable_hb_mSHIFtOoE_wLECA0kaQ_iY5Gy345";
+
+function Reviews({ code, movie }: { code: string; movie: string }) {
   const key = `reviews:${code}`;
   const [reviews, setReviews] = useState<Review[]>([]);
   const [rating, setRating] = useState(0);
   const [text, setText] = useState("");
   const [name, setName] = useState("");
+  const [postError, setPostError] = useState(false);
   useEffect(() => {
     try { setReviews(JSON.parse(localStorage.getItem(key) ?? "[]")); } catch { setReviews([]); }
   }, [key]);
@@ -292,9 +296,18 @@ function Reviews({ code }: { code: string }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!rating || !text.trim()) return;
-    const next = [{ id: crypto.randomUUID(), author: name.trim() || "Guest", rating, text: text.trim().slice(0, 1000), date: new Date().toISOString() }, ...reviews];
-    setReviews(next);
-    localStorage.setItem(key, JSON.stringify(next));
+    const review: Review = { id: crypto.randomUUID(), author: name.trim() || "Guest", rating, text: text.trim().slice(0, 1000), date: new Date().toISOString() };
+    setReviews([review, ...reviews]);
+    localStorage.setItem(key, JSON.stringify([review, ...reviews]));
+    setPostError(false);
+    // Save to the reviews database so the admin panel shows it.
+    fetch(REVIEWS_ENDPOINT, {
+      method: "POST",
+      headers: { apikey: REVIEWS_API_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: review.author, movie, rating, comment: review.text }),
+    })
+      .then((res) => { if (!res.ok) throw new Error(`status ${res.status}`); })
+      .catch(() => setPostError(true));
     setRating(0); setText(""); setName("");
   };
 
