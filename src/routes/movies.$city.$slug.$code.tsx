@@ -130,7 +130,7 @@ function MoviePage() {
         </div>
         <p className="mt-3 text-xs text-muted-foreground">Prices are rough estimates by theatre type. Tap a showtime to book on BookMyShow.</p>
 
-        <Reviews code={code} />
+        <Reviews code={code} movie={title} />
       </div>
     </main>
   );
@@ -319,6 +319,7 @@ function Reviews({ code, movie }: { code: string; movie: string }) {
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" />
         <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="What did you think?" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" />
         <button className="w-full rounded-md bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90">Post review</button>
+        {postError && <p className="text-xs text-muted-foreground">Review saved on this device, but couldn't reach the review database. It will not appear in the admin panel — try posting again.</p>}
       </form>
       <div>
         <h2 className="font-display text-3xl text-foreground">Audience reviews {avg && <span className="text-primary">· ★ {avg}</span>}</h2>
