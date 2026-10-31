@@ -7,7 +7,7 @@ import { cityName, estimatePrice, nextDays } from "@/lib/bms-types";
 
 const titleFromSlug = (s: string) => s.split("-").map((w) => w[0]?.toUpperCase() + w.slice(1)).join(" ");
 
-export const Route = createFileRoute("/movies/$city/$slug/$code")({
+export const Route = createFileRoute("/_authenticated/movies/$city/$slug/$code")({
   validateSearch: z.object({ date: z.string().regex(/^\d{8}$/).optional().catch(undefined) }),
   head: ({ params }) => {
     const t = `${titleFromSlug(params.slug)} showtimes in ${cityName(params.city)} | DivCineDekho`;

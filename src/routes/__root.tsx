@@ -8,7 +8,9 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -114,16 +116,42 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      setEmail(session?.user?.email ?? null);
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router]);
+
+  async function signOut() {
+    await queryClient.cancelQueries();
+    await supabase.auth.signOut();
+    router.navigate({ to: "/auth", replace: true });
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
         <header className="sticky top-0 z-10 border-b border-border bg-background/85 backdrop-blur">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
             <Link to="/" className="font-display text-3xl tracking-wide text-foreground">DivCine<span className="text-primary">Dekho</span></Link>
-            <CityPicker />
+            {email && (
+              <div className="flex items-center gap-2">
+                <CityPicker />
+                <button onClick={signOut} title={email} className="rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground">
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </header>
         <Outlet />
+        <Toaster />
     </QueryClientProvider>
   );
 }

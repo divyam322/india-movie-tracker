@@ -10,7 +10,7 @@ const search = z.object({
   tab: z.enum(["now", "soon"]).catch("now").default("now"),
 });
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   validateSearch: search,
   head: () => ({
     meta: [
