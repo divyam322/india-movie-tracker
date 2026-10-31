@@ -6,26 +6,60 @@ const GATEWAY = "https://connector-gateway.lovable.dev/firecrawl/v2/scrape";
 // Server-only. A real Firecrawl key (fc-...) calls Firecrawl directly — this is the
 // path used on Netlify, where FIRECRAWL_API_KEY is set in the site's environment
 // settings. A Lovable connection key (lovc_...) falls back to the Lovable gateway.
-export async function scrapeMarkdown(url: string): Promise<string> {
+const RETRY_DELAYS = [2_000, 6_000, 15_000];
+
+// Small in-memory cache: keeps repeat visits from re-hitting BookMyShow and lets us
+// serve the last good copy if the site starts refusing requests (429). Workers are
+// stateless so this is best-effort, but it removes most of the burst pressure.
+const MEMORY_TTL = 15 * 60_000;
+const memoryCache = new Map<string, { at: number; value: string }>();
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export async function scrapeMarkdown(url: string, maxAge = 3_600_000): Promise<string> {
+  const cached = memoryCache.get(url);
+  if (cached && Date.now() - cached.at < MEMORY_TTL) return cached.value;
+
   const fcKey = process.env["FIRECRAWL_API_KEY"];
   if (!fcKey) throw new Error("FIRECRAWL_API_KEY is not configured");
   const direct = fcKey.startsWith("fc-");
   const lovableKey = process.env["LOVABLE_API_KEY"];
   if (!direct && !lovableKey) throw new Error("FIRECRAWL_API_KEY must be a Firecrawl key (fc-...)");
-  const res = await fetch(direct ? DIRECT : GATEWAY, {
-    method: "POST",
-    headers: direct
-      ? { "Content-Type": "application/json", Authorization: `Bearer ${fcKey}` }
-      : { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": fcKey },
-    body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, maxAge: 3600000 }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    console.error(`Firecrawl failed [${res.status}]: ${body}`);
-    throw new Error(`Could not reach BookMyShow right now (${res.status})`);
+
+  const body = JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, maxAge });
+  const res = await (async () => {
+    let lastStatus = 0;
+    for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+      if (attempt > 0) await wait(RETRY_DELAYS[attempt - 1]!);
+      const r = await fetch(direct ? DIRECT : GATEWAY, {
+        method: "POST",
+        headers: direct
+          ? { "Content-Type": "application/json", Authorization: `Bearer ${fcKey}` }
+          : { "Content-Type": "application/json", Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": fcKey },
+        body,
+      });
+      if (r.ok) return r;
+      lastStatus = r.status;
+      // 429 (throttled) and 5xx are worth retrying; anything else fails fast.
+      if (r.status !== 429 && r.status < 500) break;
+      const text = await r.text().catch(() => "");
+      console.error(`Firecrawl attempt ${attempt + 1} failed [${lastStatus}]: ${text.slice(0, 300)}`);
+    }
+    return lastStatus;
+  })();
+
+  if (typeof res === "number") {
+    // Serve our last good copy of this page rather than an empty shell.
+    if (cached) {
+      console.warn(`Serving stale cached markdown for ${url} after scrape failure (${res})`);
+      return cached.value;
+    }
+    throw new Error(`Could not reach BookMyShow right now (${res})`);
   }
   const json = (await res.json()) as { data?: { markdown?: string }; markdown?: string };
-  return json.data?.markdown ?? json.markdown ?? "";
+  const md = json.data?.markdown ?? json.markdown ?? "";
+  memoryCache.set(url, { at: Date.now(), value: md });
+  return md;
 }
 
 function decodeOverlay(url: string): string | undefined {
