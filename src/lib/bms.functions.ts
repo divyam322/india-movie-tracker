@@ -47,7 +47,7 @@ export const getShowtimes = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const url = `https://in.bookmyshow.com/movies/${data.city}/${data.slug}/buytickets/${data.code}/${data.date}`;
     try {
-      return { ...parseShowtimes(await scrapeMarkdown(url)), error: null as string | null };
+      return { ...parseShowtimes(await scrapeMarkdown(url, 20 * 60_000)), error: null as string | null };
     } catch (e) {
       return { runtime: undefined, genres: [], formats: [], cinemas: [], error: e instanceof Error ? e.message : "Failed to load" };
     }
