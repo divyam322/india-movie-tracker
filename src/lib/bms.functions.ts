@@ -13,15 +13,25 @@ export const getMovies = createServerFn({ method: "GET" })
       ? `https://in.bookmyshow.com/explore/upcoming-movies-${data.city}`
       : `https://in.bookmyshow.com/explore/movies-${data.city}`;
     try {
-      // BookMyShow only renders the first ~16 cards (local language first), so also
-      // load each language's filtered page and merge, to cover every language.
-      const base = await scrapeMarkdown(url);
-      const langs = parseLanguageFilters(base).slice(0, 10);
-      const pages = await Promise.allSettled(
-        langs.map((l) => scrapeMarkdown(`${url}?languages=${encodeURIComponent(l.toLowerCase())}`)),
+    // BookMyShow only renders the first ~16 cards (local language first), so also
+    // load each language's filtered page and merge, to cover every language.
+    // Pages are fetched in small batches with pauses between them — firing all
+    // requests at once makes BookMyShow throttle us (429).
+    const CACHE_6H = 6 * 3_600_000; // Firecrawl serves cached copies, sparing BookMyShow
+    const base = await scrapeMarkdown(url, CACHE_6H);
+    const langs = parseLanguageFilters(base).slice(0, 10);
+    const BATCH = 3;
+    const pages: string[] = [];
+    for (let i = 0; i < langs.length; i += BATCH) {
+      const batch = langs.slice(i, i + BATCH);
+      const results = await Promise.allSettled(
+        batch.map((l) => scrapeMarkdown(`${url}?languages=${encodeURIComponent(l.toLowerCase())}`, CACHE_6H)),
       );
-      const seen = new Set<string>();
-      const movies = [base, ...pages.map((p) => (p.status === "fulfilled" ? p.value : ""))]
+      for (const r of results) if (r.status === "fulfilled") pages.push(r.value);
+      if (i + BATCH < langs.length) await new Promise((r) => setTimeout(r, 1_500));
+    }
+    const seen = new Set<string>();
+    const movies = [base, ...pages]
         .flatMap(parseListing)
         .filter((m) => !seen.has(m.code) && seen.add(m.code));
       return { movies, error: null as string | null };
@@ -37,7 +47,7 @@ export const getShowtimes = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const url = `https://in.bookmyshow.com/movies/${data.city}/${data.slug}/buytickets/${data.code}/${data.date}`;
     try {
-      return { ...parseShowtimes(await scrapeMarkdown(url)), error: null as string | null };
+      return { ...parseShowtimes(await scrapeMarkdown(url, 20 * 60_000)), error: null as string | null };
     } catch (e) {
       return { runtime: undefined, genres: [], formats: [], cinemas: [], error: e instanceof Error ? e.message : "Failed to load" };
     }
