@@ -9,68 +9,70 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as MoviesCitySlugCodeRouteImport } from './routes/movies.$city.$slug.$code'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedMoviesCitySlugCodeRouteImport } from './routes/_authenticated/movies.$city.$slug.$code'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MoviesCitySlugCodeRoute = MoviesCitySlugCodeRouteImport.update({
-  id: '/movies/$city/$slug/$code',
-  path: '/movies/$city/$slug/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedMoviesCitySlugCodeRoute =
+  AuthenticatedMoviesCitySlugCodeRouteImport.update({
+    id: '/_authenticated/movies/$city/$slug/$code',
+    path: '/movies/$city/$slug/$code',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/movies/$city/$slug/$code': typeof MoviesCitySlugCodeRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/movies/$city/$slug/$code': typeof AuthenticatedMoviesCitySlugCodeRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/movies/$city/$slug/$code': typeof MoviesCitySlugCodeRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/movies/$city/$slug/$code': typeof AuthenticatedMoviesCitySlugCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/movies/$city/$slug/$code': typeof MoviesCitySlugCodeRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/movies/$city/$slug/$code': typeof AuthenticatedMoviesCitySlugCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/movies/$city/$slug/$code'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/movies/$city/$slug/$code'
-  id: '__root__' | '/' | '/movies/$city/$slug/$code'
+  id:
+    '__root__' | '/_authenticated/' | '/_authenticated/movies/$city/$slug/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  MoviesCitySlugCodeRoute: typeof MoviesCitySlugCodeRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedMoviesCitySlugCodeRoute: typeof AuthenticatedMoviesCitySlugCodeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/movies/$city/$slug/$code': {
-      id: '/movies/$city/$slug/$code'
+    '/_authenticated/movies/$city/$slug/$code': {
+      id: '/_authenticated/movies/$city/$slug/$code'
       path: '/movies/$city/$slug/$code'
       fullPath: '/movies/$city/$slug/$code'
-      preLoaderRoute: typeof MoviesCitySlugCodeRouteImport
+      preLoaderRoute: typeof AuthenticatedMoviesCitySlugCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  MoviesCitySlugCodeRoute: MoviesCitySlugCodeRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedMoviesCitySlugCodeRoute: AuthenticatedMoviesCitySlugCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
