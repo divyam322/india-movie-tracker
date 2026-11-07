@@ -31,14 +31,20 @@ function PhoneAuth({ onBack, input }: { onBack: () => void; input: string }) {
 
   async function send(e: FormEvent) {
     e.preventDefault();
-    if (!/^\+91[6-9]\d{9}$/.test(full)) return toast.error("Enter a valid 10-digit Indian mobile number");
+    if (!/^\+91[6-9]\d{9}$/.test(full)) {
+      toast.error("Enter a valid 10-digit Indian mobile number");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.auth.signInWithOtp({
       phone: full,
-      options: { data: name ? { full_name: name } : undefined },
+      options: name ? { data: { full_name: name } } : {},
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setSent(true);
     toast.success("OTP sent by SMS");
   }
