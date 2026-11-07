@@ -19,7 +19,68 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-type Mode = "signin" | "signup" | "forgot" | "verify";
+type Mode = "signin" | "signup" | "forgot" | "verify" | "phone";
+
+function PhoneAuth({ onBack, input }: { onBack: () => void; input: string }) {
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const full = `+91${phone.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "").replace(/^0/, "")}`;
+
+  async function send(e: FormEvent) {
+    e.preventDefault();
+    if (!/^\+91[6-9]\d{9}$/.test(full)) return toast.error("Enter a valid 10-digit Indian mobile number");
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: full,
+      options: { data: name ? { full_name: name } : undefined },
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setSent(true);
+    toast.success("OTP sent by SMS");
+  }
+
+  async function verify(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ phone: full, token: code, type: "sms" });
+    setBusy(false);
+    if (error) toast.error(error.message);
+  }
+
+  return (
+    <div>
+      <h1 className="font-display text-4xl tracking-wide">Phone sign in</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {sent ? `Enter the code sent to ${full}.` : "New or existing users — we'll text you a one-time code."}
+      </p>
+      {!sent ? (
+        <form onSubmit={send} className="mt-6 space-y-3">
+          <input className={input} placeholder="Your name (for new accounts)" value={name} onChange={(e) => setName(e.target.value)} />
+          <div className="flex gap-2">
+            <span className="flex items-center rounded-lg border border-border px-3 text-muted-foreground">+91</span>
+            <input className={input} type="tel" inputMode="numeric" placeholder="Mobile number" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+          </div>
+          <button disabled={busy} className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground disabled:opacity-60">
+            {busy ? "Sending…" : "Send OTP"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={verify} className="mt-6 space-y-3">
+          <input className={input} inputMode="numeric" placeholder="6-digit code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} maxLength={8} required />
+          <button disabled={busy} className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground disabled:opacity-60">
+            {busy ? "Verifying…" : "Verify & continue"}
+          </button>
+          <button type="button" onClick={() => setSent(false)} className="text-sm text-muted-foreground hover:text-foreground">Change number / resend</button>
+        </form>
+      )}
+      <button onClick={onBack} className="mt-6 block w-full text-center text-sm text-primary hover:underline">Back to email sign in</button>
+    </div>
+  );
+}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -79,7 +140,9 @@ function AuthPage() {
   return (
     <main className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
-        {mode === "verify" ? (
+        {mode === "phone" ? (
+          <PhoneAuth onBack={() => setMode("signin")} input={input} />
+        ) : mode === "verify" ? (
           <div className="space-y-4 text-center">
             <h1 className="font-display text-4xl tracking-wide">Check your email</h1>
             <p className="text-muted-foreground">
@@ -119,6 +182,9 @@ function AuthPage() {
                   <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
                 </div>
                 <div className="space-y-2">
+                  <button onClick={() => setMode("phone")} className="w-full rounded-lg border border-border py-2.5 text-sm font-medium hover:bg-muted">
+                    Continue with phone number
+                  </button>
                   <button onClick={() => social("google")} className="w-full rounded-lg border border-border py-2.5 text-sm font-medium hover:bg-muted">
                     Continue with Google
                   </button>
