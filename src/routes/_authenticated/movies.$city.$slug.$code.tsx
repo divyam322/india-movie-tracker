@@ -12,7 +12,16 @@ export const Route = createFileRoute("/_authenticated/movies/$city/$slug/$code")
   head: ({ params }) => {
     const t = `${titleFromSlug(params.slug)} showtimes in ${cityName(params.city)} | DivCineDekho`;
     const d = `Theatres, show timings, approximate ticket prices and reviews for ${titleFromSlug(params.slug)} in ${cityName(params.city)}.`;
-    return { meta: [{ title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] };
+    return {
+      meta: [
+        { title: t },
+        { name: "description", content: d },
+        { property: "og:title", content: t },
+        { property: "og:description", content: d },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
   },
   component: MoviePage,
 });

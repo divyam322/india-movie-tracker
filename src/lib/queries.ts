@@ -3,9 +3,10 @@ import { getCinemaAddress, getMovies, getShowtimes } from "./bms.functions";
 
 export const moviesQuery = (city: string, upcoming: boolean) =>
   queryOptions({
-    queryKey: ["movies", city, upcoming],
+    // Version the key to discard previously cached empty city responses.
+    queryKey: ["movies-v2", city, upcoming],
     queryFn: () => getMovies({ data: { city, upcoming } }),
-    staleTime: 4 * 60 * 60_000, // listings barely change; avoid re-scraping BookMyShow
+    staleTime: 10 * 60_000,
   });
 
 export const showtimesQuery = (city: string, slug: string, code: string, date: string) =>

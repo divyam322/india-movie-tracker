@@ -16,9 +16,9 @@ const memoryCache = new Map<string, { at: number; value: string }>();
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function scrapeMarkdown(url: string, maxAge = 3_600_000): Promise<string> {
+export async function scrapeMarkdown(url: string, maxAge = 3_600_000, forceRefresh = false): Promise<string> {
   const cached = memoryCache.get(url);
-  if (cached && Date.now() - cached.at < MEMORY_TTL) return cached.value;
+  if (!forceRefresh && cached && Date.now() - cached.at < MEMORY_TTL) return cached.value;
 
   const fcKey = process.env["FIRECRAWL_API_KEY"];
   if (!fcKey) throw new Error("FIRECRAWL_API_KEY is not configured");
@@ -26,7 +26,7 @@ export async function scrapeMarkdown(url: string, maxAge = 3_600_000): Promise<s
   const lovableKey = process.env["LOVABLE_API_KEY"];
   if (!direct && !lovableKey) throw new Error("FIRECRAWL_API_KEY must be a Firecrawl key (fc-...)");
 
-  const body = JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, maxAge });
+  const body = JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, maxAge: forceRefresh ? 0 : maxAge });
   const res = await (async () => {
     let lastStatus = 0;
     for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
@@ -58,7 +58,7 @@ export async function scrapeMarkdown(url: string, maxAge = 3_600_000): Promise<s
   }
   const json = (await res.json()) as { data?: { markdown?: string }; markdown?: string };
   const md = json.data?.markdown ?? json.markdown ?? "";
-  memoryCache.set(url, { at: Date.now(), value: md });
+  if (md.trim()) memoryCache.set(url, { at: Date.now(), value: md });
   return md;
 }
 

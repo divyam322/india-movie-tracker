@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/")({
       { name: "description", content: "Live showtimes, theatres near you, approximate ticket prices and audience reviews across India." },
       { property: "og:title", content: "DivCineDekho — Movies & showtimes in Indian theatres" },
       { property: "og:description", content: "Find where and when your next movie is playing, city by city." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,

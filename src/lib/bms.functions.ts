@@ -18,7 +18,18 @@ export const getMovies = createServerFn({ method: "GET" })
     // Pages are fetched in small batches with pauses between them — firing all
     // requests at once makes BookMyShow throttle us (429).
     const CACHE_6H = 6 * 3_600_000; // Firecrawl serves cached copies, sparing BookMyShow
-    const base = await scrapeMarkdown(url, CACHE_6H);
+    let base = await scrapeMarkdown(url, CACHE_6H);
+    let baseMovies = parseListing(base);
+    if (baseMovies.length === 0) {
+      // A cached BookMyShow page can occasionally contain only its shell. Make
+      // one uncached request before presenting a misleading empty city listing.
+      const freshBase = await scrapeMarkdown(url, 0, true);
+      const freshMovies = parseListing(freshBase);
+      if (freshMovies.length > 0) {
+        base = freshBase;
+        baseMovies = freshMovies;
+      }
+    }
     const langs = parseLanguageFilters(base).slice(0, 10);
     const BATCH = 3;
     const pages: string[] = [];
@@ -31,9 +42,8 @@ export const getMovies = createServerFn({ method: "GET" })
       if (i + BATCH < langs.length) await new Promise((r) => setTimeout(r, 1_500));
     }
     const seen = new Set<string>();
-    const movies = [base, ...pages]
-        .flatMap(parseListing)
-        .filter((m) => !seen.has(m.code) && seen.add(m.code));
+    const movies = [...baseMovies, ...pages.flatMap(parseListing)]
+      .filter((m) => !seen.has(m.code) && seen.add(m.code));
       return { movies, error: null as string | null };
     } catch (e) {
       return { movies: [], error: e instanceof Error ? e.message : "Failed to load" };
